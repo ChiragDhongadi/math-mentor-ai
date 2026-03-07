@@ -11,46 +11,80 @@ The system features **Long-term Memory** and **RAG (Retrieval-Augmented Generati
 The project follows a cognitive architecture where inputs are processed into a standardized state, passed through a chain of specialized AI agents, and verified before being presented to the user.
 
 ```mermaid
-flowchart TD
+graph TD
+    subgraph User_Interface [Streamlit UI]
+        UI_Input[User Input: Text/Image/Audio]
+        UI_Display[Display Results]
+        UI_HITL[HITL Feedback / Approval]
+    end
 
-A[User Input]
+    subgraph LangGraph_Pipeline [LangGraph Workflow]
+        Start((Start))
+        Input_Router{Input Router}
+        
+        Node_Text[Text Node]
+        Node_Image[Image Node]
+        Node_Audio[Audio Node]
+        
+        Node_Parser[Parser Agent]
+        Node_Router[Router Agent]
+        Node_Solver[Solver Agent]
+        Node_Verifier[Verifier Agent]
+        Node_Explainer[Explainer Agent]
+        
+        End((End))
+    end
 
-A --> B{Input Type}
+    subgraph External_Services [Processing Services]
+        Service_OCR[OCR Service]
+        Service_ASR[Whisper ASR]
+    end
 
-B --> C[Text Input]
-B --> D[Image Input]
-B --> E[Audio Input]
+    subgraph Data_Layer [Data Persistence]
+        DB_RAG[(Vector DB - RAG)]
+        DB_Memory[(SQLite - Long Term Memory)]
+    end
 
-D --> F[OCR - PaddleOCR]
-E --> G[Speech to Text - Whisper]
+    %% UI to Graph
+    UI_Input -->|Invoke| Start
 
-F --> H[Parser Agent]
-G --> H
-C --> H
+    %% Graph Flow
+    Start --> Input_Router
+    Input_Router -->|Text| Node_Text
+    Input_Router -->|Image| Node_Image
+    Input_Router -->|Audio| Node_Audio
 
-H --> I[Intent Router Agent]
+    %% Input Processing
+    Node_Image -->|Image Path| Service_OCR
+    Service_OCR -->|Extracted Text| Node_Image
+    
+    Node_Audio -->|Audio Path| Service_ASR
+    Service_ASR -->|Transcript| Node_Audio
 
-I --> J[Memory Check]
+    %% Main Pipeline
+    Node_Text --> Node_Parser
+    Node_Image --> Node_Parser
+    Node_Audio --> Node_Parser
+    
+    Node_Parser --> Node_Router
+    Node_Router --> Node_Solver
+    
+    %% Solver Logic
+    Node_Solver <-->|Retrieve Context| DB_RAG
+    Node_Solver <-->|Retrieve Similar / Exact Match| DB_Memory
+    
+    Node_Solver --> Node_Verifier
+    Node_Verifier --> Node_Explainer
+    Node_Explainer --> End
 
-J -->|Similar Problem Found| K[Reuse Previous Solution]
+    %% Output to UI
+    End -->|Final State| UI_Display
 
-J -->|No Match| L[RAG Retrieval]
+    %% HITL Loop
+    UI_Display -->|If hitl_required=True| UI_HITL
+    UI_HITL -->|Approve / Edit & Save| DB_Memory
+    UI_HITL -->|Reject| UI_Input
 
-L --> M[Knowledge Base]
-M --> N[Solver Agent]
-
-K --> O[Verifier Agent]
-N --> O
-
-O -->|Low Confidence| P[Human in the Loop]
-
-O -->|Verified| Q[Explainer Agent]
-
-Q --> R[Final Answer + Step Explanation]
-
-R --> S[Store Interaction in Memory]
-
-S --> T[Future Problem Reuse]
 ```
 
 ---
