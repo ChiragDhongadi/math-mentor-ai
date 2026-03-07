@@ -7,7 +7,7 @@ langgraph
 chromadb
 pydantic
 python-dotenv
-
+langchain-groq
 sympy
 
 paddleocr
