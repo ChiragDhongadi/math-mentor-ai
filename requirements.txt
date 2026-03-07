@@ -8,6 +8,7 @@ chromadb
 pydantic
 python-dotenv
 langchain-groq
+opencv-python-headless
 sympy
 
 paddleocr
