@@ -1,0 +1,73 @@
+graph TD
+    subgraph User_Interface [Streamlit UI]
+        UI_Input[User Input: Text/Image/Audio]
+        UI_Display[Display Results]
+        UI_HITL[HITL Feedback / Approval]
+    end
+
+    subgraph LangGraph_Pipeline [LangGraph Workflow]
+        Start((Start))
+        Input_Router{Input Router}
+        
+        Node_Text[Text Node]
+        Node_Image[Image Node]
+        Node_Audio[Audio Node]
+        
+        Node_Parser[Parser Agent]
+        Node_Router[Router Agent]
+        Node_Solver[Solver Agent]
+        Node_Verifier[Verifier Agent]
+        Node_Explainer[Explainer Agent]
+        
+        End((End))
+    end
+
+    subgraph External_Services [Processing Services]
+        Service_OCR[OCR Service]
+        Service_ASR[Whisper ASR]
+    end
+
+    subgraph Data_Layer [Data Persistence]
+        DB_RAG[(Vector DB - RAG)]
+        DB_Memory[(SQLite - Long Term Memory)]
+    end
+
+    %% UI to Graph
+    UI_Input -->|Invoke| Start
+
+    %% Graph Flow
+    Start --> Input_Router
+    Input_Router -->|Text| Node_Text
+    Input_Router -->|Image| Node_Image
+    Input_Router -->|Audio| Node_Audio
+
+    %% Input Processing
+    Node_Image -->|Image Path| Service_OCR
+    Service_OCR -->|Extracted Text| Node_Image
+    
+    Node_Audio -->|Audio Path| Service_ASR
+    Service_ASR -->|Transcript| Node_Audio
+
+    %% Main Pipeline
+    Node_Text --> Node_Parser
+    Node_Image --> Node_Parser
+    Node_Audio --> Node_Parser
+    
+    Node_Parser --> Node_Router
+    Node_Router --> Node_Solver
+    
+    %% Solver Logic
+    Node_Solver <-->|Retrieve Context| DB_RAG
+    Node_Solver <-->|Retrieve Similar / Exact Match| DB_Memory
+    
+    Node_Solver --> Node_Verifier
+    Node_Verifier --> Node_Explainer
+    Node_Explainer --> End
+
+    %% Output to UI
+    End -->|Final State| UI_Display
+
+    %% HITL Loop
+    UI_Display -->|If hitl_required=True| UI_HITL
+    UI_HITL -->|Approve / Edit & Save| DB_Memory
+    UI_HITL -->|Reject| UI_Input
