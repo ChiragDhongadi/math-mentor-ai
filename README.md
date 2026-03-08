@@ -1,5 +1,9 @@
 # 📘 AI Math Mentor
 
+👇 Click the below badge to view the live Math Mentor AI App Demo
+
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Live_App-red?logo=streamlit&logoColor=white)](https://math-mentor-ai-app.streamlit.app/)
+
 **AI Math Mentor** is a multimodal educational assistant designed to solve complex mathematics problems (Algebra, Calculus, Probability, etc.). It uses a **LangGraph** agentic workflow to parse, solve, verify, and explain solutions.
 
 The system features **Long-term Memory** and **RAG (Retrieval-Augmented Generation)** to learn from past interactions and improve over time via a **Human-in-the-Loop (HITL)** feedback mechanism.
